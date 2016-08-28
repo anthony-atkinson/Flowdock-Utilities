@@ -1,0 +1,30 @@
+[
+  {
+    "id": "c66947c5-5b7e-4b8f-9d1f-0c626655d14d",
+    "name": "Main",
+    "parameterized_name": "main",
+    "email": "main@anthony-atkinson.flowdock.com",
+    "description": "The Main flow is for organization-wide discussions.",
+    "url": "https://api.flowdock.com/flows/anthony-atkinson/main",
+    "web_url": "https://www.flowdock.com/app/anthony-atkinson/main",
+    "access_mode": "organization",
+    "flow_admin": true,
+    "api_token": "1afe1ed7a9396b8006a5f48210d2555e",
+    "open": true,
+    "joined": true,
+    "last_message_at": "2016-08-28T03:07:46.387Z",
+    "last_message_id": 88,
+    "team_notifications": true,
+    "organization": {
+      "active": true,
+      "id": 74579,
+      "name": "Anthony Atkinson",
+      "parameterized_name": "anthony-atkinson",
+      "url": "https://api.flowdock.com/organizations/anthony-atkinson",
+      "user_count": 1,
+      "user_limit": 0,
+      "flow_admins": false
+    },
+    "join_url": "https://www.flowdock.com/invitations/bb9880f0f19556481de9d34490385f348189ced3"
+  }
+]
