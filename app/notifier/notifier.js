@@ -12,8 +12,8 @@ angular.module('myApp.notifier', ['ngRoute', 'ngAudio', 'ngCookies'])
       function($scope, $cookies, $location, $http, $filter, ngAudio) {
         var client_id = 'bfc652cbb77ce16d2f78b6674e022957f1a01ef9678f0b5a1314257e77dc3fd6';
         var client_secret = '8f153ae7f6ab115847445c7fe8ff78f75784b8d68e924e86940dc405dfcde88b';
-        var client_redirect_uri_encoded = 'http%3A%2F%2F192.168.1.10%2Fnotifier';
-        var redirect_url = 'http://192.168.1.10/notifier';
+        var client_redirect_uri_encoded = 'http%3A%2F%2F10.230.1.207%2FFlowdock-Notifier%2Fnotifier';
+        var redirect_url = 'http://10.230.1.207/Flowdock-Notifier/notifier';
 
         var streams = [];
 
@@ -84,10 +84,12 @@ angular.module('myApp.notifier', ['ngRoute', 'ngAudio', 'ngCookies'])
 
         $scope.clearSiteCookies = function() {
           console.log('User reseting cookies');
-          $cookies.remove('userToken');
-          $cookies.remove('access_token');
-          $cookies.remove('refresh_token');
-          $cookies.remove('user_token');
+          $cookies.remove('userToken', {path: '/'} );
+          $cookies.remove('access_token', {path: '/'} );
+          $cookies.remove('refresh_token', {path: '/'} );
+          $cookies.remove('user_token', {path: '/'} );
+          $cookies.remove('created_at', {path: '/'} );
+          $cookies.remove('expires_in', {path: '/'} );
           location.reload();
         };
 
@@ -186,7 +188,7 @@ angular.module('myApp.notifier', ['ngRoute', 'ngAudio', 'ngCookies'])
             // dataType: 'json',
             headers: { 'Content-Type': 'application/json' },
             url: location.protocol + '//' + location.hostname + location.port +
-            '/notifier/getFlowNames.php?access_token=' + $scope.access_token
+            '/Flowdock-Notifier/notifier/getFlowNames.php?access_token=' + $scope.access_token
           }).then(function success(response) {
             $scope.ListOfFlows = [];
             var flows = response.data;
@@ -211,10 +213,12 @@ angular.module('myApp.notifier', ['ngRoute', 'ngAudio', 'ngCookies'])
           $scope.parseWordsToWatchFor();
           var search = $location.search();
           if(search.code !== undefined) {
+			console.log('user_token exists in query string.');
             $scope.userToken = search.code;
             $cookies.put('userToken', $scope.userToken, { path: '/', expires: oneMonthFromToday() } );
             $location.search('code', null);
           }else if(search.access_token !== undefined) {
+			console.log('saving access_tokken');
             $scope.access_token = search.access_token;
             $cookies.put('access_token', $scope.access_token, { path: '/', expires: oneMonthFromToday() } );
             $location.search('code', null);
@@ -232,7 +236,7 @@ angular.module('myApp.notifier', ['ngRoute', 'ngAudio', 'ngCookies'])
               crossOrigin: true,
               // dataType: 'json',
               headers: { 'Content-Type': 'application/json' },
-              url: location.protocol + '//' + location.hostname + location.port + '/notifier/getAccessToken.php',
+              url: location.protocol + '//' + location.hostname + location.port + '/Flowdock-Notifier/notifier/getAccessToken.php',
               data: {
                 client_id: client_id,
                 client_secret: client_secret,
@@ -242,22 +246,27 @@ angular.module('myApp.notifier', ['ngRoute', 'ngAudio', 'ngCookies'])
                 provider: $http,
                 ReturnUrl: redirect_url
               }
-            }).then(function successCallback(response) {
-              console.log(response.data);
+            }).then(function successCallback(response) {			  
+			  if(response.data.access_token !== undefined && response.data.access_token !== null) {
+				console.log(response.data);
+				
+				$scope.access_token = response.data.access_token;
+                $cookies.put('access_token', response.data.access_token, { path: '/', expires: oneMonthFromToday() } );
 
-              $scope.access_token = response.data.access_token;
-              $cookies.put('access_token', response.data.access_token, { path: '/', expires: oneMonthFromToday() } );
+                $scope.refresh_token = response.data.refresh_token;
+                $cookies.put('refresh_token', response.data.refresh_token, { path: '/', expires: oneMonthFromToday() } );
 
-              $scope.refresh_token = response.data.refresh_token;
-              $cookies.put('refresh_token', response.data.refresh_token, { path: '/', expires: oneMonthFromToday() } );
+                $scope.created_at = new Date(response.data.created_at);
+                $cookies.put('created_at', response.data.created_at, { path: '/', expires: oneMonthFromToday() } );
 
-              $scope.created_at = new Date(response.data.created_at);
-              $cookies.put('created_at', response.data.created_at, { path: '/', expires: oneMonthFromToday() } );
+                $scope.expires_in = new Date(response.data.created_at + response.data.expires_in);
+                $cookies.put('expires_in', response.data.expires_in, { path: '/', expires: oneMonthFromToday() } );
 
-              $scope.expires_in = new Date(response.data.created_at + response.data.expires_in);
-              $cookies.put('expires_in', response.data.expires_in, { path: '/', expires: oneMonthFromToday() } );
-
-              $scope.refreshFlowNames();
+                $scope.refreshFlowNames();
+			  }else {
+				console.error('access_token response was not valid!');
+			  }
+              
             }, function errorCallback(response) {
               console.error('An error occurred! See below:');
               console.error(response);
@@ -265,14 +274,14 @@ angular.module('myApp.notifier', ['ngRoute', 'ngAudio', 'ngCookies'])
           }
           // Token may need refreshed; Check to see if our current access token has expired
           else if($scope.created_at !== undefined && $scope.created_at !== null && $scope.expires_in !== undefined && $scope.expires_in !== null) {
-            console.log('Refreshing Token');
             var curDate = new Date();
             if(curDate > $scope.expires_in) {
+			  console.log('Refreshing Token');
               $http({
                 method: 'POST',
                 crossOrigin: true,
                 headers: { 'Content-Type': 'application/json' },
-                url: location.protocol + '//' + location.hostname + location.port + '/notifier/getAccessToken.php',
+                url: location.protocol + '//' + location.hostname + location.port + '/Flowdock-Notifier/notifier/getAccessToken.php',
                 data: {
                   refresh_token: $scope.refresh_token,
                   client_id: client_id,
