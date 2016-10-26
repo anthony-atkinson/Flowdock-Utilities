@@ -1,17 +1,25 @@
 <div class="container" ng-controller="NotifierCtrl">
-    <h3>Flows To Watch <button class="btn btn-mini" ng-click="refreshFlowNames()">Refresh Flow Names</button></h3>
+    <div class="page-header">
+        <h2>Flowdock Utilities</h2>
+    </div>
+    <button class="btn btn-mini" ng-click="refreshFlowNames()">Refresh Flow Names</button>
+    <button class="btn" ng-click="clearSiteCookies()">Clear Cookies for Site</button>
+    <div class="page-header">
+        <h3>Flows To Watch for Keywords</h3>
+    </div>
     <div ng-repeat="flow in ListOfFlows" class="checkbox">
         <label>
-            <input type="checkbox" name="selectedFlow[]" value="{{flow.name}}"
-                   ng-checked="FlowsToListenTo.indexOf(flow.parameterized_name) > -1"
-                   ng-click="toggleFlow(flow.parameterized_name)" ng-disabled="ListeningToFlows">
+            <input type="checkbox" name="selectedKeywordFlow[]" value="{{flow.name}}"
+                   ng-checked="FlowsToListenToKeywords.indexOf(flow.parameterized_name) > -1"
+                   ng-click="toggleFlow(flow.parameterized_name, 'keywordsWatched')" ng-disabled="ListeningToKeywordFlows">
             {{flow.name}} ({{flow.organization.name}})
         </label>
     </div>
     <h4>Settings</h4>
     <div class="checkbox">
-        <label for="notificationSoundEnabled">
-            <input type="checkbox" id="notificationSoundEnabled" ng-checked="SoundEnabled" ng-click="toggleSound()">
+        <label for="notificationSoundEnabledForKeywords">
+            <input type="checkbox" id="notificationSoundEnabledForKeywords" ng-checked="SoundEnabledForKeywords"
+                   ng-click="toggleSound('keywordsWatched')">
             Enable Sound
         </label>
     </div>
@@ -21,24 +29,55 @@
     </div>
 
     <div class="button-group">
-        <button class="btn btn-primary" ng-click="startListening()" ng-if="!ListeningToFlows">
-            Start Listening to Flows
+        <button class="btn btn-primary" ng-click="startListening('keywordsWatched')" ng-if="!ListeningToKeywordFlows">
+            Start Listening for Keywords
         </button>
-        <button class="btn btn-danger" ng-click="stopListening()" ng-if="ListeningToFlows">
-            Stop Listening to Flows
+        <button class="btn btn-danger" ng-click="stopListening('keywordsWatched')" ng-if="ListeningToKeywordFlows">
+            Stop Listening for Keywords
         </button>
-        <button class="btn" ng-click="clearSiteCookies()">Clear Cookies for Site</button>
     </div>
 
-    <!--<h4>Flows Listening To</h4>-->
-    <!--<pre>{{FlowsToListenTo}}</pre>-->
+    <div class="page-header">
+        <h3>Flows To Watch Constantly</h3>
+    </div>
+    <div ng-repeat="flow in ListOfFlows" class="checkbox">
+        <label>
+            <input type="checkbox" name="selectedConstantlyFlow[]" value="{{flow.name}}"
+                   ng-checked="FlowsToListenToConstantly.indexOf(flow.parameterized_name) > -1"
+                   ng-click="toggleFlow(flow.parameterized_name, 'constantlyWatched')" ng-disabled="ListeningToConstantlyFlows">
+            {{flow.name}} ({{flow.organization.name}})
+        </label>
+    </div>
+    <h4>Settings</h4>
+    <div class="checkbox">
+        <label for="notificationSoundEnabledForConstantlyWatched">
+            <input type="checkbox" id="notificationSoundEnabledForConstantlyWatched"
+                   ng-checked="SoundEnabledForConstant" ng-click="toggleSound('constantlyWatched')">
+            Enable Sound
+        </label>
+    </div>
 
-    <!--<h4>Sound Enabled</h4>-->
-    <!--<pre>{{SoundEnabled}}</pre>-->
+    <div class="button-group">
+        <button class="btn btn-primary" ng-click="startListening('constantlyWatched')" ng-if="!ListeningToConstantlyFlows">
+            Start Watching for Activity
+        </button>
+        <button class="btn btn-danger" ng-click="stopListening('constantlyWatched')" ng-if="ListeningToConstantlyFlows">
+            Stop Watching for Activity
+        </button>
+    </div>
 
-    <!--<h4>Words Watching For</h4>-->
-    <!--<pre>{{WordsToWatchFor}}</pre>-->
+    <br/>
+    <br/>
 
-    <!--<h4>Parsed Words Watching For</h4>-->
-    <!--<pre>{{ParsedWordsToWatchFor}}</pre>-->
+    <div class="panel panel-default">
+        <div class="panel-heading">Notification History</div>
+        <div class="panel-body">
+            <span ng-repeat="notification in NotificationHistory | orderBy: '[]' : true">
+                <span class="row" style="margin: 0 !important;">
+                    <p><b>{{notification.Title}}</b> - {{notification.FormattedDate}} <br/>
+                    {{notification.Body}}</p>
+                </span>
+            </span>
+        </div>
+    </div>
 </div>

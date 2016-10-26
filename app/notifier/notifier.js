@@ -15,7 +15,8 @@ angular.module('myApp.notifier', ['ngRoute', 'ngAudio', 'ngCookies'])
         var client_redirect_uri_encoded = '';
         var redirect_url = '';
 
-        var streams = [];
+        var constantlyWatchedStreams = [];
+        var keywordWatchedStreams = [];
         // Get setting from app_settings.json
         ($http.get(location.protocol + '//' + location.hostname + location.port + '/notifier/app_settings.json')
             .then(function successCallback(response) {
@@ -34,9 +35,12 @@ angular.module('myApp.notifier', ['ngRoute', 'ngAudio', 'ngCookies'])
         );
 
         function setAppVariablesAfterSettingsLoaded() {
-          $scope.ListeningToFlows = false;
-          $scope.SoundEnabled = ($cookies.get('SoundEnabled') !== null && $cookies.get('SoundEnabled') !== undefined) ?
-              $cookies.get('SoundEnabled') == 'true' : true;
+          $scope.ListeningToKeywordFlows = false;
+          $scope.ListeningToConstantlyFlows = false;
+          $scope.SoundEnabledForKeywords = ($cookies.get('SoundEnabledForKeywords') !== null && $cookies.get('SoundEnabledForKeywords') !== undefined) ?
+              $cookies.get('SoundEnabledForKeywords') == 'true' : true;
+          $scope.SoundEnabledForConstant = ($cookies.get('SoundEnabledForConstant') !== null && $cookies.get('SoundEnabledForConstant') !== undefined) ?
+              $cookies.get('SoundEnabledForConstant') == 'true' : true;
           $scope.NotificationSound = ngAudio.load("assets/sounds/SAO.mp3");
 
           $scope.access_token = ($cookies.get('access_token') !== null && $cookies.get('access_token') !== undefined) ?
@@ -55,43 +59,98 @@ angular.module('myApp.notifier', ['ngRoute', 'ngAudio', 'ngCookies'])
 
           $scope.ListOfFlows = [];
 
-          $scope.FlowsToListenTo = ($cookies.get('FlowsToListenTo') !== null && $cookies.get('FlowsToListenTo') !== undefined) ?
-              $cookies.get('FlowsToListenTo') : [];
-          // Possibly fix FlowsToListenTo
-          if( !Array.isArray($scope.FlowsToListenTo) && $scope.FlowsToListenTo != '') {
-            $scope.FlowsToListenTo = $scope.FlowsToListenTo.split(",");
+          $scope.FlowsToListenToConstantly = ($cookies.get('FlowsToListenToConstantly') !== null && $cookies.get('FlowsToListenToConstantly') !== undefined) ?
+              $cookies.get('FlowsToListenToConstantly') : [];
+          // Possibly fix FlowsToListenToConstantly
+          if( !Array.isArray($scope.FlowsToListenToConstantly) && $scope.FlowsToListenToConstantly != '') {
+            $scope.FlowsToListenToConstantly = $scope.FlowsToListenToConstantly.split(",");
           }else {
-            $scope.FlowsToListenTo = [];
+            $scope.FlowsToListenToConstantly = [];
+          }
+
+          $scope.FlowsToListenToKeywords = ($cookies.get('FlowsToListenToKeywords') !== null && $cookies.get('FlowsToListenToKeywords') !== undefined) ?
+              $cookies.get('FlowsToListenToKeywords') : [];
+          // Possibly fix FlowsToListenToKeywords
+          if( !Array.isArray($scope.FlowsToListenToKeywords) && $scope.FlowsToListenToKeywords != '') {
+            $scope.FlowsToListenToKeywords = $scope.FlowsToListenToKeywords.split(",");
+          }else {
+            $scope.FlowsToListenToKeywords = [];
           }
 
           $scope.WordsToWatchFor = ($cookies.get('WordsToWatchFor') !== null && $cookies.get('WordsToWatchFor') !== undefined) ?
               $cookies.get('WordsToWatchFor') : '';
 
           $scope.controllerInit();
+
+          $scope.NotificationHistory = [];
+        }
+
+        function NotificationItem(title, body, date) {
+          this.Title = title;
+          this.Body = body;
+          this.FormattedDate = $filter('date')(date, 'yyyy-MM-dd HH:mm:ss');
+        }
+
+        function pushOnToNotificationHistory(notif) {
+          $scope.NotificationHistory.push(notif);
+          // Pop off the first element if array is larger than 20 elements
+          if($scope.NotificationHistory.length > 20) {
+            $scope.NotificationHistory.shift();
+          }
         }
 
         function oneMonthFromToday() {
           return new Date(new Date().getTime() + 24 * 30 * 60 * 60 * 1000);
         }
 
-        $scope.toggleSound = function() {
-          $scope.SoundEnabled = !$scope.SoundEnabled;
-          var valToPutInCookie = ($scope.SoundEnabled) ? 'true' : 'false';
-          $cookies.put('SoundEnabled', valToPutInCookie, { path: '/', expires: oneMonthFromToday() } );
+        $scope.toggleSound = function(flowSet) {
+          var valToPutInCookie = 'false';
+          var cookieToUpdate = '';
+          if(flowSet == 'constantlyWatched') {
+            $scope.SoundEnabledForConstant = !$scope.SoundEnabledForConstant;
+            valToPutInCookie = ($scope.SoundEnabledForConstant) ? 'true' : 'false';
+            cookieToUpdate = 'SoundEnabledForConstant';
+          }else if(flowSet == 'keywordsWatched') {
+            $scope.SoundEnabledForKeywords = !$scope.SoundEnabledForKeywords;
+            valToPutInCookie = ($scope.SoundEnabledForKeywords) ? 'true' : 'false';
+            cookieToUpdate = 'SoundEnabledForKeywords';
+          }else {
+            throw "flowSet not specified. Unable to continue";
+          }
+          $cookies.put(cookieToUpdate, valToPutInCookie, { path: '/', expires: oneMonthFromToday() } );
         };
 
-        $scope.toggleFlow = function(flowName) {
-          var idx = $scope.FlowsToListenTo.indexOf(flowName);
-          // is currently selected
-          if(idx > -1) {
-            $scope.FlowsToListenTo.splice(idx, 1);
+        $scope.toggleFlow = function(flowName, flowSet) {
+          var flowList = null;
+          if(flowSet == 'constantlyWatched') {
+            flowList = $scope.FlowsToListenToConstantly;
+          }else if(flowSet == 'keywordsWatched') {
+            flowList = $scope.FlowsToListenToKeywords;
           }
-          // Is newly selected
-          else {
-            $scope.FlowsToListenTo.push(flowName);
+
+          if(flowList != null) {
+            var idx = flowList.indexOf(flowName);
+            // is currently selected
+            if(idx > -1) {
+              if(flowSet == 'constantlyWatched') {
+                $scope.FlowsToListenToConstantly.splice(idx, 1);
+              }else if(flowSet == 'keywordsWatched') {
+                $scope.FlowsToListenToKeywords.splice(idx, 1);
+              }
+            }
+            // Is newly selected
+            else {
+              if(flowSet == 'constantlyWatched') {
+                $scope.FlowsToListenToConstantly.push(flowName);
+              }else if(flowSet == 'keywordsWatched') {
+                $scope.FlowsToListenToKeywords.push(flowName);
+              }
+            }
           }
+
           // Save to cookie
-          $cookies.put('FlowsToListenTo', $scope.FlowsToListenTo, { path: '/', expires: oneMonthFromToday() } );
+          $cookies.put('FlowsToListenToConstantly', $scope.FlowsToListenToConstantly, { path: '/', expires: oneMonthFromToday() } );
+          $cookies.put('FlowsToListenToKeywords', $scope.FlowsToListenToKeywords, { path: '/', expires: oneMonthFromToday() } );
         };
 
         $scope.parseWordsToWatchFor = function() {
@@ -112,21 +171,31 @@ angular.module('myApp.notifier', ['ngRoute', 'ngAudio', 'ngCookies'])
           location.reload();
         };
 
-        $scope.startListening = function() {
-          console.log('startListening()');
-          $cookies.put('FlowsToListenTo', $scope.FlowsToListenTo, { path: '/', expires: oneMonthFromToday() } );
-          $cookies.put('WordsToWatchFor', $scope.WordsToWatchFor, { path: '/', expires: oneMonthFromToday() } );
-          $cookies.put('SoundEnabled', $scope.SoundEnabled, { path: '/', expires: oneMonthFromToday() } );
+        $scope.startListening = function(flowSet) {
+          var flowList = null;
+          if(flowSet == 'constantlyWatched') {
+            flowList = $scope.FlowsToListenToConstantly;
+          }else if(flowSet == 'keywordsWatched') {
+            flowList = $scope.FlowsToListenToKeywords;
+          }else {
+            throw "flowSet not specified. Unable to continue";
+          }
 
-          for(var i = 0, len = $scope.FlowsToListenTo.length; i < len; i++) {
-            var flowName = $scope.FlowsToListenTo[i];
+          for(var i = 0, len = flowList.length; i < len; i++) {
+            var flowName = flowList[i];
             var foundFlowObj = $filter('filter')($scope.ListOfFlows, {parameterized_name: flowName}, true);
             if(foundFlowObj.length) {
-              $scope.ListeningToFlows = true;
+              if(flowSet == 'constantlyWatched') {
+                $scope.ListeningToConstantlyFlows = true;
+              }else if(flowSet == 'keywordsWatched') {
+                $scope.ListeningToKeywordFlows = true;
+              }
+
               var flowOrgParamName = foundFlowObj[0].organization.parameterized_name;
               var localStream = new EventSource('https://stream.flowdock.com/flows/' + flowOrgParamName +
                   '/' + flowName + '?access_token=' + $scope.access_token);
               localStream.AttachedFlow = foundFlowObj[0];
+              localStream.FlowSet = flowSet;
 
               localStream.onopen = function(event) {
                 console.log('in business boys!');
@@ -134,20 +203,28 @@ angular.module('myApp.notifier', ['ngRoute', 'ngAudio', 'ngCookies'])
               localStream.onmessage = function(event) {
                 var message = JSON.parse(event.data);
                 if(message.event == 'message') {
-                  var msg = message.content.toLowerCase();
-                  for(var j in $scope.ParsedWordsToWatchFor) {
-                    var searchWord = $scope.ParsedWordsToWatchFor[j];
-                    var lowerCasedWord = searchWord.toLowerCase();
-                    if(msg.indexOf(lowerCasedWord) > -1) {
-                      var flowName = event.target.AttachedFlow.name;
-                      var body = 'Someone mentioned "' + lowerCasedWord + '" in the "' + flowName + '" flow.';
-                      spawnNotification(body);
-                      break;
+                  if(event.target.FlowSet == 'keywordsWatched') {
+                    var msg = message.content.toLowerCase();
+                    for(var j in $scope.ParsedWordsToWatchFor) {
+                      var searchWord = $scope.ParsedWordsToWatchFor[j];
+                      var lowerCasedWord = searchWord.toLowerCase();
+                      if(msg.indexOf(lowerCasedWord) > -1) {
+                        var flowName = event.target.AttachedFlow.name;
+                        var body = 'Someone mentioned "' + lowerCasedWord + '" in the "' + flowName + '" flow.';
+                        spawnNotification(body, null, null, $scope.SoundEnabledForKeywords);
+                        break;
+                      }
                     }
+                  }else if(event.target.FlowSet == 'constantlyWatched') {
+                    spawnNotification(message.content, null, event.target.AttachedFlow.name, $scope.SoundEnabledForConstant);
                   }
                 }
               };
-              streams.push(localStream);
+              if(flowSet == 'keywordsWatched') {
+                keywordWatchedStreams.push(localStream);
+              }else if(flowSet == 'constantlyWatched') {
+                constantlyWatchedStreams.push(localStream);
+              }
             }else {
               console.log('Unable to find stream with name ' + flowName + '. Do you still belong to it?');
             }
@@ -155,13 +232,36 @@ angular.module('myApp.notifier', ['ngRoute', 'ngAudio', 'ngCookies'])
 
         };
 
-        $scope.stopListening = function() {
-          $scope.ListeningToFlows = false;
-          for(var i = 0, len = streams.length; i < len; i++) {
-            streams[i].close();
-            streams[i] = null;
+        $scope.stopListening = function(flowSet) {
+          if(flowSet == 'constantlyWatched') {
+            $scope.ListeningToConstantlyFlows = false;
+          }else if(flowSet == 'keywordsWatched') {
+            $scope.ListeningToKeywordFlows = false;
+          }else {
+            throw "flowSet not specified. Unable to continue";
           }
-          streams = [];
+
+          var streamsSize = 0;
+          if(flowSet == 'constantlyWatched') {
+            streamsSize = constantlyWatchedStreams.length;
+          }else if(flowSet == 'keywordsWatched') {
+            streamsSize = keywordWatchedStreams.length;
+          }
+
+          for(var i = 0; i < streamsSize; i++) {
+            if(flowSet == 'constantlyWatched') {
+              constantlyWatchedStreams[i].close();
+              constantlyWatchedStreams[i] = null;
+            }else if(flowSet == 'keywordsWatched') {
+              keywordWatchedStreams[i].close();
+              keywordWatchedStreams[i] = null;
+            }
+          }
+          if(flowSet == 'constantlyWatched') {
+            constantlyWatchedStreams = [];
+          }else if(flowSet == 'keywordsWatched') {
+            keywordWatchedStreams = [];
+          }
         };
 
         function authenticateWithFlowdock() {
@@ -360,17 +460,22 @@ angular.module('myApp.notifier', ['ngRoute', 'ngAudio', 'ngCookies'])
 
         };
 
-        function spawnNotification(body, icon, title) {
+        function spawnNotification(body, icon, title, playSound) {
           if(icon == null || icon == undefined) {
             icon = "assets/images/flowdock_icon.png";
           }
           if(title == null || title == undefined) {
             title = "Flowdock Notifier";
           }
+          if(playSound == null || playSound == undefined) {
+            playSound = false;
+          }
           var options = {
             body: body,
             icon: icon
           };
+
+          pushOnToNotificationHistory(new NotificationItem(title, body, new Date()));
 
           // Let's check if the browser supports notifications
           if (!("Notification" in window)) {
@@ -381,7 +486,7 @@ angular.module('myApp.notifier', ['ngRoute', 'ngAudio', 'ngCookies'])
           else if (Notification.permission === "granted") {
             // If it's okay let's create a notification
             var n = new Notification(title, options);
-            if($scope.SoundEnabled) {
+            if(playSound) {
               $scope.NotificationSound.play();
             }
             setTimeout(n.close.bind(n), 10 * 1000);
@@ -393,7 +498,7 @@ angular.module('myApp.notifier', ['ngRoute', 'ngAudio', 'ngCookies'])
               // If the user accepts, let's create a notification
               if (permission === "granted") {
                 var n = new Notification(title, options);
-                if($scope.SoundEnabled) {
+                if(playSound) {
                   $scope.NotificationSound.play();
                 }
                 setTimeout(n.close.bind(n), 10 * 1000);
