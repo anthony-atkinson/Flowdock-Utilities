@@ -10,45 +10,65 @@ angular.module('myApp.notifier', ['ngRoute', 'ngAudio', 'ngCookies'])
 
     .controller('NotifierCtrl', ['$scope', '$cookies', '$location', '$http', '$filter', 'ngAudio',
       function($scope, $cookies, $location, $http, $filter, ngAudio) {
-        var client_id = 'bfc652cbb77ce16d2f78b6674e022957f1a01ef9678f0b5a1314257e77dc3fd6';
-        var client_secret = '8f153ae7f6ab115847445c7fe8ff78f75784b8d68e924e86940dc405dfcde88b';
-        var client_redirect_uri_encoded = 'http%3A%2F%2F192.168.1.10%2Fnotifier';
-        var redirect_url = 'http://192.168.1.10/notifier';
+        var client_id = '';
+        var client_secret = '';
+        var client_redirect_uri_encoded = '';
+        var redirect_url = '';
 
         var streams = [];
+        // Get setting from app_settings.json
+        ($http.get(location.protocol + '//' + location.hostname + location.port + '/notifier/app_settings.json')
+            .then(function successCallback(response) {
+              client_id = response.data.client_id;
+              client_secret = response.data.client_secret;
+              redirect_url = response.data.redirect_url;
+              client_redirect_uri_encoded = encodeURI(redirect_url);
+              console.log("settings obtained!");
+              setAppVariablesAfterSettingsLoaded();
+            }, function errorCallback(response) {
+              // console.error('An error occurred! See below:');
+              // console.error(response);
+              throw "Unable to get app_settings.json from server!";
+            }
+            )
+        );
 
-        $scope.ListeningToFlows = false;
-        $scope.SoundEnabled = ($cookies.get('SoundEnabled') !== null && $cookies.get('SoundEnabled') !== undefined) ?
-            $cookies.get('SoundEnabled') : true;
-        $scope.NotificationSound = ngAudio.load("assets/sounds/SAO.mp3");
+        function setAppVariablesAfterSettingsLoaded() {
+          $scope.ListeningToFlows = false;
+          $scope.SoundEnabled = ($cookies.get('SoundEnabled') !== null && $cookies.get('SoundEnabled') !== undefined) ?
+              $cookies.get('SoundEnabled') == 'true' : true;
+          $scope.NotificationSound = ngAudio.load("assets/sounds/SAO.mp3");
 
-        $scope.access_token = ($cookies.get('access_token') !== null && $cookies.get('access_token') !== undefined) ?
-            $cookies.get('access_token') : undefined;
+          $scope.access_token = ($cookies.get('access_token') !== null && $cookies.get('access_token') !== undefined) ?
+              $cookies.get('access_token') : undefined;
 
-        $scope.userToken = ($cookies.get('userToken') !== null && $cookies.get('userToken') !== undefined) ?
-            $cookies.get('userToken') : undefined;
-        $scope.access_token = ($cookies.get('access_token') !== null && $cookies.get('access_token') !== undefined) ?
-            $cookies.get('access_token') : undefined;
-        $scope.refresh_token = ($cookies.get('refresh_token') !== null && $cookies.get('refresh_token') !== undefined) ?
-            $cookies.get('refresh_token') : undefined;
-        $scope.created_at = ($cookies.get('created_at') !== null && $cookies.get('created_at') !== undefined) ?
-            $cookies.get('created_at') : undefined;
-        $scope.expires_in = ($cookies.get('expires_in') !== null && $cookies.get('expires_in') !== undefined) ?
-            $cookies.get('expires_in') : undefined;
+          $scope.userToken = ($cookies.get('userToken') !== null && $cookies.get('userToken') !== undefined) ?
+              $cookies.get('userToken') : undefined;
+          $scope.access_token = ($cookies.get('access_token') !== null && $cookies.get('access_token') !== undefined) ?
+              $cookies.get('access_token') : undefined;
+          $scope.refresh_token = ($cookies.get('refresh_token') !== null && $cookies.get('refresh_token') !== undefined) ?
+              $cookies.get('refresh_token') : undefined;
+          $scope.created_at = ($cookies.get('created_at') !== null && $cookies.get('created_at') !== undefined) ?
+              $cookies.get('created_at') : undefined;
+          $scope.expires_in = ($cookies.get('expires_in') !== null && $cookies.get('expires_in') !== undefined) ?
+              $cookies.get('expires_in') : undefined;
 
-        $scope.ListOfFlows = [];
+          $scope.ListOfFlows = [];
 
-        $scope.FlowsToListenTo = ($cookies.get('FlowsToListenTo') !== null && $cookies.get('FlowsToListenTo') !== undefined) ?
-            $cookies.get('FlowsToListenTo') : [];
-        // Possibly fix FlowsToListenTo
-        if( !Array.isArray($scope.FlowsToListenTo) && $scope.FlowsToListenTo != '') {
-          $scope.FlowsToListenTo = $scope.FlowsToListenTo.split(",");
-        }else {
-          $scope.FlowsToListenTo = [];
+          $scope.FlowsToListenTo = ($cookies.get('FlowsToListenTo') !== null && $cookies.get('FlowsToListenTo') !== undefined) ?
+              $cookies.get('FlowsToListenTo') : [];
+          // Possibly fix FlowsToListenTo
+          if( !Array.isArray($scope.FlowsToListenTo) && $scope.FlowsToListenTo != '') {
+            $scope.FlowsToListenTo = $scope.FlowsToListenTo.split(",");
+          }else {
+            $scope.FlowsToListenTo = [];
+          }
+
+          $scope.WordsToWatchFor = ($cookies.get('WordsToWatchFor') !== null && $cookies.get('WordsToWatchFor') !== undefined) ?
+              $cookies.get('WordsToWatchFor') : '';
+
+          $scope.controllerInit();
         }
-
-        $scope.WordsToWatchFor = ($cookies.get('WordsToWatchFor') !== null && $cookies.get('WordsToWatchFor') !== undefined) ?
-            $cookies.get('WordsToWatchFor') : '';
 
         function oneMonthFromToday() {
           return new Date(new Date().getTime() + 24 * 30 * 60 * 60 * 1000);
@@ -56,7 +76,8 @@ angular.module('myApp.notifier', ['ngRoute', 'ngAudio', 'ngCookies'])
 
         $scope.toggleSound = function() {
           $scope.SoundEnabled = !$scope.SoundEnabled;
-          $cookies.put('SoundEnabled', $scope.SoundEnabled, { path: '/', expires: oneMonthFromToday() } );
+          var valToPutInCookie = ($scope.SoundEnabled) ? 'true' : 'false';
+          $cookies.put('SoundEnabled', valToPutInCookie, { path: '/', expires: oneMonthFromToday() } );
         };
 
         $scope.toggleFlow = function(flowName) {
@@ -92,6 +113,7 @@ angular.module('myApp.notifier', ['ngRoute', 'ngAudio', 'ngCookies'])
         };
 
         $scope.startListening = function() {
+          console.log('startListening()');
           $cookies.put('FlowsToListenTo', $scope.FlowsToListenTo, { path: '/', expires: oneMonthFromToday() } );
           $cookies.put('WordsToWatchFor', $scope.WordsToWatchFor, { path: '/', expires: oneMonthFromToday() } );
           $cookies.put('SoundEnabled', $scope.SoundEnabled, { path: '/', expires: oneMonthFromToday() } );
@@ -142,10 +164,6 @@ angular.module('myApp.notifier', ['ngRoute', 'ngAudio', 'ngCookies'])
           streams = [];
         };
 
-        $scope.testSignIn = function() {
-          authenticateWithFlowdock();
-        };
-
         function authenticateWithFlowdock() {
           // Redirect to get token from Flowdock
           window.location = 'https://www.flowdock.com/oauth/authorize?client_id=' + client_id +
@@ -190,37 +208,63 @@ angular.module('myApp.notifier', ['ngRoute', 'ngAudio', 'ngCookies'])
           }).then(function success(response) {
             $scope.ListOfFlows = [];
             var flows = response.data;
-            console.log('flows:');
-            console.log(flows);
-            for(var i = 0, len = flows.length; i < len; i++) {
-              $scope.ListOfFlows.push({
-                id: flows[i].id,
-                name: flows[i].name,
-                parameterized_name: flows[i].parameterized_name,
-                description: flows[i].description,
-                organization: flows[i].organization
-              });
+            if(Array.isArray(flows)) {
+              console.log('flows:');
+              console.log(flows);
+              for(var i = 0, len = flows.length; i < len; i++) {
+                $scope.ListOfFlows.push({
+                  id: flows[i].id,
+                  name: flows[i].name,
+                  parameterized_name: flows[i].parameterized_name,
+                  description: flows[i].description,
+                  organization: flows[i].organization
+                });
+              }
+            }else {
+              console.log('flows was not an array!');
             }
+
           }, function error(response){
             console.error('An error has occurred retrieving flow names. See below.');
             console.error(response);
           });
         };
 
+        // Taken from http://stackoverflow.com/a/901144 since the angular $location.search()
+        // seems to be having problems with the query appearing before the hash.
+        function getParameterByName(name) {
+          var url = window.location.href;
+          name = name.replace(/[\[\]]/g, "\\$&");
+          var regex = new RegExp("[?&]" + name + "(=([^&#]*)|&|#|$)"),
+              results = regex.exec(url);
+          if (!results) {
+            return null;
+          }
+          if (!results[2]) {
+            return '';
+          }
+          return decodeURIComponent(results[2].replace(/\+/g, " "));
+        }
+
         $scope.controllerInit = function() {
           $scope.parseWordsToWatchFor();
-          var search = $location.search();
-          if(search.code !== undefined) {
-            $scope.userToken = search.code;
+          var code = getParameterByName('code');
+          var access_token = getParameterByName('access_token');
+          if(code != null) {
+            console.log('in if');
+            $scope.userToken = code;
             $cookies.put('userToken', $scope.userToken, { path: '/', expires: oneMonthFromToday() } );
             $location.search('code', null);
-          }else if(search.access_token !== undefined) {
-            $scope.access_token = search.access_token;
+          }else if(access_token != null) {
+            console.log('in else if 1');
+            $scope.access_token = access_token;
             $cookies.put('access_token', $scope.access_token, { path: '/', expires: oneMonthFromToday() } );
             $location.search('code', null);
           }else if($scope.userToken !== undefined) {
+            console.log('in else if 2');
             // Do nothing since it is already stored in our cookie
           }else {
+            console.log('in else');
             authenticateWithFlowdock();
           }
 
@@ -243,7 +287,7 @@ angular.module('myApp.notifier', ['ngRoute', 'ngAudio', 'ngCookies'])
                 ReturnUrl: redirect_url
               }
             }).then(function successCallback(response) {
-              console.log(response.data);
+              // console.log(response.data);
 
               $scope.access_token = response.data.access_token;
               $cookies.put('access_token', response.data.access_token, { path: '/', expires: oneMonthFromToday() } );
@@ -279,7 +323,7 @@ angular.module('myApp.notifier', ['ngRoute', 'ngAudio', 'ngCookies'])
                   client_secret: client_secret,
                   grant_type: 'refresh_token',
                   provider: $http,
-                  ReturnUrl: redirect_url
+                  ReturnUrl: client_redirect_uri_encoded
                 }
               }).then(function successCallback(response) {
                 $scope.access_token = response.data.access_token;
@@ -304,6 +348,12 @@ angular.module('myApp.notifier', ['ngRoute', 'ngAudio', 'ngCookies'])
               console.log('auto-refreshing flow names.');
               $scope.refreshFlowNames();
             }
+          }
+          // Clear out query string if needed
+          if(window.location.search !== undefined && window.location.search.length > 0) {
+            setTimeout(function() {
+              window.location.href = window.location.href.split("?")[0];
+            }, 1500);
           }
 
           setUpNotificationSystem();

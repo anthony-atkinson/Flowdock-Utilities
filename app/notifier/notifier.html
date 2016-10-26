@@ -1,4 +1,4 @@
-<div class="container" ng-controller="NotifierCtrl" ng-init="controllerInit()">
+<div class="container" ng-controller="NotifierCtrl">
     <h3>Flows To Watch <button class="btn btn-mini" ng-click="refreshFlowNames()">Refresh Flow Names</button></h3>
     <div ng-repeat="flow in ListOfFlows" class="checkbox">
         <label>
@@ -11,8 +11,7 @@
     <h4>Settings</h4>
     <div class="checkbox">
         <label for="notificationSoundEnabled">
-            <input type="checkbox" id="notificationSoundEnabled" ng-checked="SoundEnabled === true"
-                   value="{{SoundEnabled}}" ng-click="toggleSound()">
+            <input type="checkbox" id="notificationSoundEnabled" ng-checked="SoundEnabled" ng-click="toggleSound()">
             Enable Sound
         </label>
     </div>
