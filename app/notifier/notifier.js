@@ -24,11 +24,10 @@ angular.module('myApp.notifier', ['ngRoute', 'ngAudio', 'ngCookies'])
               client_secret = response.data.client_secret;
               redirect_url = response.data.redirect_url;
               client_redirect_uri_encoded = encodeURI(redirect_url);
-              console.log("settings obtained!");
               setAppVariablesAfterSettingsLoaded();
             }, function errorCallback(response) {
-              // console.error('An error occurred! See below:');
-              // console.error(response);
+              console.info('An error occurred! See below:');
+              console.info(response);
               throw "Unable to get app_settings.json from server!";
             }
             )
@@ -309,8 +308,6 @@ angular.module('myApp.notifier', ['ngRoute', 'ngAudio', 'ngCookies'])
             $scope.ListOfFlows = [];
             var flows = response.data;
             if(Array.isArray(flows)) {
-              console.log('flows:');
-              console.log(flows);
               for(var i = 0, len = flows.length; i < len; i++) {
                 $scope.ListOfFlows.push({
                   id: flows[i].id,
@@ -322,6 +319,7 @@ angular.module('myApp.notifier', ['ngRoute', 'ngAudio', 'ngCookies'])
               }
             }else {
               console.log('flows was not an array!');
+              throw 'Data coming back from flows request was not an array like expected!';
             }
 
           }, function error(response){
@@ -351,20 +349,16 @@ angular.module('myApp.notifier', ['ngRoute', 'ngAudio', 'ngCookies'])
           var code = getParameterByName('code');
           var access_token = getParameterByName('access_token');
           if(code != null) {
-            console.log('in if');
             $scope.userToken = code;
             $cookies.put('userToken', $scope.userToken, { path: '/', expires: oneMonthFromToday() } );
             $location.search('code', null);
           }else if(access_token != null) {
-            console.log('in else if 1');
             $scope.access_token = access_token;
             $cookies.put('access_token', $scope.access_token, { path: '/', expires: oneMonthFromToday() } );
             $location.search('code', null);
           }else if($scope.userToken !== undefined) {
-            console.log('in else if 2');
             // Do nothing since it is already stored in our cookie
           }else {
-            console.log('in else');
             authenticateWithFlowdock();
           }
 
@@ -387,8 +381,6 @@ angular.module('myApp.notifier', ['ngRoute', 'ngAudio', 'ngCookies'])
                 ReturnUrl: redirect_url
               }
             }).then(function successCallback(response) {
-              // console.log(response.data);
-
               $scope.access_token = response.data.access_token;
               $cookies.put('access_token', response.data.access_token, { path: '/', expires: oneMonthFromToday() } );
 
