@@ -22,7 +22,28 @@
       <p class="browsehappy">You are using an <strong>outdated</strong> browser. Please <a href="http://browsehappy.com/">upgrade your browser</a> to improve your experience.</p>
   <![endif]-->
 
-  <div ng-view></div>
+  <div class="container" ng-controller="MainAppCtrl">
+    <div class="page-header text-center">
+      <h2>Flowdock Utilities</h2>
+    </div>
+    <div class="text-center" style="padding-bottom: 15px;">
+      <div class="btn-group">
+        <button type="button" class="btn" ng-class="{ 'active': AppMode == 'Notifier'}" ng-click="setAppMode('Notifier')">
+          Notifier
+        </button>
+        <button type="button" class="btn" ng-class="{ 'active': AppMode == 'Search'}" ng-click="setAppMode('Search')">
+          Search
+        </button>
+        <button type="button" class="btn" ng-class="{ 'active': AppMode == 'FlowList'}" ng-click="setAppMode('FlowList')">
+          Flow List
+        </button>
+        <button type="button" class="btn" ng-class="{ 'active': AppMode == 'UserList'}" ng-click="setAppMode('UserList')">
+          User List
+        </button>
+      </div>
+    </div>
+    <div ng-view></div>
+  </div>
 
   <!-- In production use:
   <script src="//ajax.googleapis.com/ajax/libs/angularjs/x.x.x/angular.min.js"></script>
@@ -36,6 +57,9 @@
   <script src="bower_components/angular-audio/app/scripts/main.js"></script>
   <script src="app.js"></script>
   <script src="notifier/notifier.js"></script>
+  <script src="UserList/UserList.js"></script>
+  <script src="FlowList/FlowList.js"></script>
+  <script src="Search/Search.js"></script>
   <script src="components/version/version.js"></script>
   <script src="components/version/version-directive.js"></script>
   <script src="components/version/interpolate-filter.js"></script>

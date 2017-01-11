@@ -1,9 +1,13 @@
-<div class="container" ng-controller="NotifierCtrl">
-    <div class="page-header">
-        <h2>Flowdock Utilities</h2>
+<div ng-controller="NotifierCtrl">
+    <div class="text-center">
+        <h3>Notifier</h3>
     </div>
-    <button class="btn btn-mini" ng-click="refreshFlowNames()">Refresh Flow Names</button>
-    <button class="btn" ng-click="clearSiteCookies()">Clear Cookies for Site</button>
+    <div class="text-center">
+        <button class="btn btn-mini" ng-click="refreshFlowNames()">Refresh Flow Names</button>
+        <button class="btn btn-mini" ng-click="refreshUserList()">Refresh User List</button>
+        <button class="btn" ng-click="clearSiteCookies()">Clear Cookies for Site</button>
+    </div>
+
     <div class="page-header">
         <h3>Flows To Watch for Keywords</h3>
     </div>

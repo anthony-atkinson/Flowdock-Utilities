@@ -4,10 +4,6 @@ $request_body = file_get_contents('php://input');
 $decoded_json = json_decode($request_body);
 
 $data = (array) $decoded_json;
-//var_dump($request_body);
-//var_dump($decoded_json);
-//var_dump($data);
-//die();
 
 $url = 'https://api.flowdock.com/oauth/token';
 
