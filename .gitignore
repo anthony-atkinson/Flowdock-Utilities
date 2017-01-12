@@ -5,4 +5,4 @@ bower_components/
 tmp
 .DS_Store
 .idea
-/app/notifier/app_settings.json
+/app/app_settings.json
