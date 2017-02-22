@@ -12,6 +12,7 @@ angular.module('myApp', [
   'myApp.Notifier',
   'myApp.UserList',
   'myApp.FlowList',
+  'myApp.Tags',
   'myApp.Search',
   'myApp.version'
 ]).
@@ -31,6 +32,9 @@ config(['$locationProvider', '$routeProvider',
         })
         .when('/Search', {
           templateUrl: 'Search/Search.html'
+        })
+        .when('/Tags', {
+          templateUrl: 'Tags/Tags.html'
         })
         .otherwise({redirectTo: '/Notifier'});
   }

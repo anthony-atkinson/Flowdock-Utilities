@@ -1,3 +1,58 @@
 <div ng-controller="SearchCtrl">
-    <p>Not Implemented Yet</p>
+    <div class="form-group">
+        <label for="searchTerms">Search Terms (Separated by Spaces)</label>
+        <input type="text" class="form-control" id="searchTerms" ng-model="searchTerms">
+    </div>
+
+    <div class="text-center">
+        <h4>Search Mode</h4>
+        <label class="radio-inline">
+            <input type="radio" name="searchMode" ng-model="searchMode" value="flows">
+            Flows
+        </label>
+        <label class="radio-inline">
+            <input type="radio" name="searchMode" ng-model="searchMode" value="users">
+            Users
+        </label>
+    </div>
+
+    <div ng-show="searchMode == 'flows'">
+        <div class="form-group">
+          <label for="flowToSearch">Flow to Search:</label>
+          <select class="form-control" id="flowToSearch" ng-model="flowToSearch"
+                  ng-options="flow.name for flow in ListOfFlows()">
+          </select>
+        </div>
+    </div>
+    <div ng-show="searchMode == 'users'">
+        <div class="form-group">
+            <label for="userToSearch">User to Search:</label>
+            <select class="form-control" id="userToSearch" ng-model="userIdToSearch">
+                <option>Please select a value</option>
+                <option ng-repeat="user in ListOfUsers()" value="{{user.id}}">{{user.name}} ({{user.nick}})</option>
+            </select>
+        </div>
+    </div>
+
+    <div class="text-center">
+        <button class="btn btn-primary" ng-click="performSearch()">Search!</button>
+    </div>
+    <br/>
+
+    <div ng-if="searchInProgress" class="text-center">
+        <h3>Performing Search</h3>
+    </div>
+
+    <div ng-if="response.length != undefined">
+        <h3>Results: {{response.length}}</h3>
+        <div class="panel panel-default" ng-repeat="message in response.slice().reverse()">
+            <div class="panel-heading">
+                <img ng-show="findUserAvatar(message.user) != null" ng-src="{{findUserAvatar(message.user)}}" style="max-width: 25px; max-height: 25px;"/>
+                {{findUserNick(message.user)}}: {{getNiceTime(message.sent)}}
+            </div>
+            <div class="panel-body">{{message.content}}</div>
+            <div ng-show="message.tags.length != 0" class="panel-footer"><b>Tags: </b>{{formattedTagList(message.tags)}}</div>
+        </div>
+    </div>
+
 </div>

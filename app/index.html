@@ -40,6 +40,9 @@
         <button type="button" class="btn" ng-class="{ 'active': AppMode == 'UserList'}" ng-click="setAppMode('UserList')">
           User List
         </button>
+        <button type="button" class="btn" ng-class="{ 'active': AppMode == 'Tags'}" ng-click="setAppMode('Tags')">
+          Tags
+        </button>
       </div>
     </div>
     <div ng-view></div>
@@ -65,6 +68,7 @@
   <script src="UserList/UserList.js"></script>
   <script src="FlowList/FlowList.js"></script>
   <script src="Search/Search.js"></script>
+  <script src="Tags/Tags.js"></script>
   <script src="components/version/version.js"></script>
   <script src="components/version/version-directive.js"></script>
   <script src="components/version/interpolate-filter.js"></script>

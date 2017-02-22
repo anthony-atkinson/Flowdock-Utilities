@@ -124,12 +124,12 @@ service('FlowdockAuthService', ['$http', '$cookies', 'DateUtil', function($http,
     var access_token = getParameterByName('access_token');
     if(code != null) {
       serviceRoot.userToken = code;
-      $cookies.put('userToken', serviceRoot.userToken, { path: '/', expires: DateUtil.OneMonthFromToday() } );
+      $cookies.put('userToken', serviceRoot.userToken, { path: '/', expires: DateUtil.oneMonthFromToday() } );
       clearOutQuery();
       return;
     }else if(access_token != null) {
       serviceRoot.access_token = access_token;
-      $cookies.put('access_token', serviceRoot.access_token, { path: '/', expires: DateUtil.OoneMonthFromToday() } );
+      $cookies.put('access_token', serviceRoot.access_token, { path: '/', expires: DateUtil.oneMonthFromToday() } );
       $location.search('code', null);
       clearOutQuery();
       return;
