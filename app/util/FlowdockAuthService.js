@@ -11,16 +11,18 @@ service('FlowdockAuthService', ['$http', '$cookies', 'DateUtil', function($http,
   this.ListOfUsers = [];
   this.ListOfUsersNotAvailable = [];
   var token_obj = $cookies.get('token_obj');
-  if(token_obj.startsWith('j:')) {
-    token_obj = token_obj.substr(2);
+  if(token_obj !== undefined && token_obj !== null) {
+    if(token_obj.startsWith('j:')) {
+      token_obj = token_obj.substr(2);
+    }
+    token_obj = JSON.parse(token_obj);
+    
+    this.userToken = token_obj.access_token;
+    this.access_token = token_obj.access_token;
+    this.refresh_token = token_obj.refresh_token;
+    this.created_at = token_obj.created_at;
+    this.expires_in = token_obj.expires_in;
   }
-  token_obj = JSON.parse(token_obj);
-
-  this.userToken = token_obj.access_token;
-  this.access_token = token_obj.access_token;
-  this.refresh_token = token_obj.refresh_token;
-  this.created_at = token_obj.created_at;
-  this.expires_in = token_obj.expires_in;
 
   function clearOutQuery() {
     if(window.location.search !== undefined && window.location.search.length > 0) {
