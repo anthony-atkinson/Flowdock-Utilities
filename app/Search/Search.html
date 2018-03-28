@@ -29,7 +29,7 @@
             <label for="userToSearch">User to Search:</label>
             <select class="form-control" id="userToSearch" ng-model="userIdToSearch">
                 <option>Please select a value</option>
-                <option ng-repeat="user in ListOfUsers()" value="{{user.id}}">{{user.name}} ({{user.nick}})</option>
+                <option ng-repeat="user in ListOfUsers()" value="{{user.id}}">{{user.name}} ({{user.nick}}){{(user.removed) ? ' (Removed)' : ''}}</option>
             </select>
         </div>
     </div>

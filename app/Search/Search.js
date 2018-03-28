@@ -3,8 +3,8 @@
 angular.module('myApp.Search', ['ngRoute', 'ngAudio', 'ngCookies', 'myApp.FlowdockAuthService']).
 controller('SearchCtrl', ['$scope', '$cookies', '$location', '$http', '$filter', 'ngAudio', 'FlowdockAuthService',
   function($scope, $cookies, $location, $http, $filter, ngAudio, authService) {
-    //'http://192.168.1.10/backend/FlowdockProxy.php?proxy=https://api.flowdock.com/private/255189/messages&search=hi&access_token=78aaef3e078e6fe90c0dab0f86acd5116291816be4cf577075294066c02f3a45';
-    var baseProxyUrl = '/backend/FlowdockProxy.php?proxy=:proxy';
+    var baseProxyUrl = '/notifier/api/FlowdockProxy?proxy=:proxy?event=message,comment,status,file';
+    var baseUserObjUrl = '/notifier/api/get/user?proxy=https://api.flowdock.com/private/:id&access_token=:access_token';
     var baseFlowUrl = 'https://api.flowdock.com/flows/:organization/:flow/messages';
     var flowUrlParams = 'search=:search&access_token=:access_token';
     var baseUserUrl = 'https://api.flowdock.com/private/:user/messages';
@@ -56,8 +56,12 @@ controller('SearchCtrl', ['$scope', '$cookies', '$location', '$http', '$filter',
         $scope.response = resp.data;
         $scope.searchInProgress = false;
       }, function errorCallback(resp) {
-        console.log(resp);
-        $scope.searchInProgress = false;
+        if(resp.status === 500 && resp.data === 'Requires re-auth') {
+          location.href = '/notifier/api/auth';
+        }else {
+          console.log(resp);
+          $scope.searchInProgress = false;
+        }
       });
     };
 
@@ -65,21 +69,68 @@ controller('SearchCtrl', ['$scope', '$cookies', '$location', '$http', '$filter',
 
     };
 
+    function requestUserObjFromFlowdock(userID) {
+      var requestUrl = baseUserObjUrl;
+      requestUrl = requestUrl.replace(':id', userID);
+      requestUrl = requestUrl.replace(':access_token', authService.access_token);
+      $http({
+        method: 'GET',
+        crossOrigin: true,
+        headers: { 'Content-Type': 'text/plain'},
+        url: requestUrl
+      }).then(function successCallback(resp) {
+        var returnUser = resp.data;
+        if(returnUser !== undefined && returnUser !== null && returnUser.message === undefined) {
+          return returnUser;
+        }
+        console.log('Something happened while trying to retrieve user');
+        return null;
+      }, function errorCallback(response) {
+        if(response.status === 500 && response.data === 'Requires re-auth') {
+          location.href = '/notifier/api/auth';
+        }else {
+          console.log('An error occurred while trying to retieve user from flowdock. See error:');
+          console.log(response);
+        }
+      });
+    }
+
     $scope.findUser = function(userID) {
+      if(userID === null || userID === undefined) {
+        return null;
+      }
       var userList = $scope.ListOfUsers();
       var foundUser = $filter('filter')(userList, {id: parseInt(userID)}, true);
       if(foundUser.length) {
         return foundUser[0]
+      }else if(authService.ListOfUsersNotAvailable.indexOf(userID) === -1) {
+        // User was probably removed from the organization; lets query for the user manually
+        // and add them to the main user list so that we don't have to do this again for this session.
+        var retrievedUser = requestUserObjFromFlowdock(userID);
+        if(retrievedUser !== null && retrievedUser !== undefined) {
+          userList.push(retrievedUser);
+          return retrievedUser;
+        }else {
+          // Add it to the list of not available users so that we don't try
+          // to process it again and waste time and network resources.
+          authService.ListOfUsersNotAvailable.push(userID);
+        }
       }
       return null;
     };
 
     $scope.findUserAvatar = function(userID) {
-      return $scope.findUser(userID).avatar;
+      var foundUser = $scope.findUser(userID);
+      return foundUser !== null ? foundUser.avatar : 'assets/images/base_avatar.png';
     };
 
     $scope.findUserNick = function(userID) {
-      return $scope.findUser(userID).nick;
+      var foundUser = $scope.findUser(userID);
+      if(foundUser !== null && foundUser !== undefined) {
+        return (foundUser.removed) ? foundUser.nick + ' (Removed)' : foundUser.nick;
+      }else {
+        return userID + ' (object MIA)';
+      }
     };
 
     $scope.getNiceTime = function(timeInSeconds) {

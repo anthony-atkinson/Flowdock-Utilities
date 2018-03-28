@@ -6,3 +6,5 @@ tmp
 .DS_Store
 .idea
 /app/app_settings.json
+/server/cached_users.json
+/server/oauth_settings.json
