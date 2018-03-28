@@ -41,12 +41,13 @@ service('FlowdockNotifierService', ['$filter', '$cookies', 'FlowdockAuthService'
           localStream.FlowSet = flowSet;
   
           localStream.onopen = function(event) {
-            console.log('in business boys!');
+            console.log('Starting listening to flow ' + this.AttachedFlow.name + ' (' +
+              this.AttachedFlow.organization.name + ')!');
           };
           localStream.onmessage = function(event) {
             var message = JSON.parse(event.data);
-            if(message.event == 'message') {
-              if(event.target.FlowSet == 'keywordsWatched') {
+            if(message.event === 'message') {
+              if(event.target.FlowSet === 'keywordsWatched') {
                 var msg = message.content.toLowerCase();
                 for(var j in serviceRoot.ParsedWordsToWatchFor) {
                   var searchWord = serviceRoot.ParsedWordsToWatchFor[j];
@@ -58,7 +59,7 @@ service('FlowdockNotifierService', ['$filter', '$cookies', 'FlowdockAuthService'
                     break;
                   }
                 }
-              }else if(event.target.FlowSet == 'constantlyWatched') {
+              }else if(event.target.FlowSet === 'constantlyWatched') {
                 var fullMsg = '';
                 var foundUsr = $filter('filter')(authService.ListOfUsers, {id: parseInt(message.user) }, true);
                 if(foundUsr.length) {
@@ -70,9 +71,9 @@ service('FlowdockNotifierService', ['$filter', '$cookies', 'FlowdockAuthService'
               }
             }
           };
-          if(flowSet == 'keywordsWatched') {
+          if(flowSet === 'keywordsWatched') {
             keywordWatchedStreams.push(localStream);
-          }else if(flowSet == 'constantlyWatched') {
+          }else if(flowSet === 'constantlyWatched') {
             constantlyWatchedStreams.push(localStream);
           }
         }else {
@@ -83,33 +84,33 @@ service('FlowdockNotifierService', ['$filter', '$cookies', 'FlowdockAuthService'
     };
   
     this.stopListening = function(flowSet) {
-      if(flowSet == 'constantlyWatched') {
+      if(flowSet === 'constantlyWatched') {
         this.ListeningToConstantlyFlows = false;
-      }else if(flowSet == 'keywordsWatched') {
+      }else if(flowSet === 'keywordsWatched') {
         this.ListeningToKeywordFlows = false;
       }else {
         throw "flowSet not specified. Unable to continue";
       }
   
       var streamsSize = 0;
-      if(flowSet == 'constantlyWatched') {
+      if(flowSet === 'constantlyWatched') {
         streamsSize = constantlyWatchedStreams.length;
-      }else if(flowSet == 'keywordsWatched') {
+      }else if(flowSet === 'keywordsWatched') {
         streamsSize = keywordWatchedStreams.length;
       }
   
       for(var i = 0; i < streamsSize; i++) {
-        if(flowSet == 'constantlyWatched') {
+        if(flowSet === 'constantlyWatched') {
           constantlyWatchedStreams[i].close();
           constantlyWatchedStreams[i] = null;
-        }else if(flowSet == 'keywordsWatched') {
+        }else if(flowSet === 'keywordsWatched') {
           keywordWatchedStreams[i].close();
           keywordWatchedStreams[i] = null;
         }
       }
-      if(flowSet == 'constantlyWatched') {
+      if(flowSet === 'constantlyWatched') {
         constantlyWatchedStreams = [];
-      }else if(flowSet == 'keywordsWatched') {
+      }else if(flowSet === 'keywordsWatched') {
         keywordWatchedStreams = [];
       }
     };

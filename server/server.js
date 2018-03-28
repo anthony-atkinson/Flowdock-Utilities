@@ -26,8 +26,6 @@ let oauth_settings = {};
 // Read in oauth settings from either environment variables (docker) or settings file
 // TODO: Get from environment variables first (for docker support)
 oauth_settings = JSON.parse(fs.readFileSync('oauth_settings.json', 'utf8'));
-// Read in a list of cached users
-let cached_users = JSON.parse(fs.readFileSync('cached_users.json', 'utf8')) || [];
 
 const flowUriHost = 'https://api.flowdock.com';
 const BASE_PATH = '/notifier';
@@ -50,12 +48,12 @@ const oauth2 = simpleOauthModule.create({
 
 // Authorization uri definition
 const authorizationUri = oauth2.authorizationCode.authorizeURL({
-  redirect_uri: oauth_settings.redirect_uri,//'http://localhost:3000/callback',
+  redirect_uri: oauth_settings.redirect_uri,
   scope: 'flow private',
-  state: '123456',
+  state: Math.random(),
 });
 
-// Initial page redirecting to Github
+// Initial page redirecting to auth
 app.get(BASE_PATH_API + '/auth', (req, res) => {
   const tokenCookie = req.cookies['token_obj'];
   if(tokenCookie !== undefined && tokenCookie !== null) {
@@ -154,63 +152,38 @@ app.get(BASE_PATH_API + '/FlowdockProxy', (req, res) => {
 app.get(BASE_PATH_API + '/get/user', (req, res) => {
   const proxy = req.query.proxy;
   log.debug('proxy: ', proxy);
-  // Attempt to find user in cached file first before calling out to flowdock
-  const userIdRegExpr = /\/users|private\/(\d*)/g;
-  const userIdMatcher = userIdRegExpr.exec(proxy);
-  log.debug(userIdMatcher);
-  const userId = userIdMatcher[1];
-  // const foundCachedUser = cached_users.table.find(u => u.id === userId);
-  log.debug('userId: ' + userId);
-  const foundCachedUser = cached_users.find(u => u.id !== undefined && u.id.toString() === userId );
-  if(foundCachedUser !== undefined && foundCachedUser !== null) {
-    log.debug('user was cached! Returning cached version instead.');
-    return res.status(200).json(foundCachedUser);
+
+  if( !proxy.startsWith('https://api.flowdock.com/') ) {
+    let returnMsg = 'Only flowdock api is acceptable to proxy';
+    log.error(msg);
+    return res.status(400).json(returnMsg);
   }else {
-    if( !proxy.startsWith('https://api.flowdock.com/') ) {
-      return res.status(400).json('Only flowdock api is acceptable to proxy');
-    }else {
-      log.debug('User was not cached; Fetching from flowdock');
-      // Clone req.query so that we can delete properties without causing problems
-      let queryWithoutProxy = Object.assign({}, req.query);
-      delete queryWithoutProxy.proxy;
+    log.debug('Fetching user from flowdock');
+    // Clone req.query so that we can delete properties without causing problems
+    let queryWithoutProxy = Object.assign({}, req.query);
+    delete queryWithoutProxy.proxy;
 
-      request.get({
-        url: proxy,
-        qs: queryWithoutProxy
-      }, function(error, resp, body) {
-        if(error) {
-          log.error('An error occurred while proxying Flowdock request. Error: ', error);
-          return res.status(500).json(error);
-        }else {
-          // Check if we need to re-auth again; if so, redirect to /notifier/api/auth
-          log.debug('body: ' + body);
-          const messageFromBody = JSON.parse(body).message;
-          log.debug('messageFromBody: ' + messageFromBody);
-          if(messageFromBody !== undefined && messageFromBody !== 'Access denied') {
-            return res.status(500).json('Requires re-auth');
-          }
-          const userObj = JSON.parse(body);
-          // Only do the rest of this if userObj does NOT contain a message property to avoid junk data
-          // being placed into the cached users file.
-          if(userObj.message === undefined) {
-            // Add user to list of cached users
-            cached_users.push(userObj);
-            // Update file async
-            fs.writeFile('cached_users.json', JSON.stringify(cached_users, null, '\t'), 'utf8', function(error) {
-              if(error) {
-                log.error('unable to update cached_users.json!', error);
-              }else {
-                log.debug('wrote to file successfully!');
-              }
-            });
-          }
-          // return the body regardless of what is in it.
-          return res.status(200).send(body);
+    request.get({
+      url: proxy,
+      qs: queryWithoutProxy
+    }, function(error, resp, body) {
+      if(error) {
+        log.error('An error occurred while proxying Flowdock request. Error: ', error);
+        return res.status(500).json(error);
+      }else {
+        // Check if we need to re-auth again; if so, redirect to /notifier/api/auth
+        log.debug('body: ' + body);
+        const messageFromBody = JSON.parse(body).message;
+        log.debug('messageFromBody: ' + messageFromBody);
+        if(messageFromBody !== undefined && messageFromBody !== 'Access denied') {
+          return res.status(500).json('Requires re-auth');
         }
-      });
-    }
+        const userObj = JSON.parse(body);
+        // return the body regardless of what is in it.
+        return res.status(200).send(body);
+      }
+    });
   }
-
 });
 
 app.get(BASE_PATH + '/', (req, res) => {
