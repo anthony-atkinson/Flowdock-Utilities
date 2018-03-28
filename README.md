@@ -1,7 +1,8 @@
 # Flowdock Utilities/Notifier
 
 This project was built to provide features that were missing when migrating from Skype to
-Flowdock. The following features that were missing from Skype have been implemented:
+Flowdock. The following features that were in Skype that are missing from Flowdock have 
+been implemented:
 
 * Notifying you if certain keywords were said in one or more flows. This is complete 
 with a notification and a sound (that can be enabled or disabled)
@@ -19,7 +20,7 @@ since it was easy to add that part in with the user search working.
 ## Installation
 ### Prerequisites
 
-[NodeJS](http://nodejs.org/) is used to run the backend part of this application and  
+[NodeJS](http://nodejs.org/) is used to run the backend part of this application and 
 to serve the web interface files. Install this before preceding.
 
 You will also need to have git to clone this repository.
@@ -40,7 +41,7 @@ npm install
 The backend NodeJS server handles authentication requests and also handles proxying  
 requests to Flowdock from the frontend. It also serves the application files. 
 
-To start the backend, change into the `/server` directory from the root of the  
+To start the backend, change into the `/server` directory from the root of the 
 application. From here, you can start the backend server by running:
 
 ```
@@ -69,7 +70,6 @@ ProxyPassReverse /notifier http://localhost:3000/notifier
 #### NGINX
 
 Coming soon ...
-```
 
 ## Testing
 
