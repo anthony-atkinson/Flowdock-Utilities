@@ -1,3 +1,14 @@
 <div ng-controller="UserListCtrl">
-    <p>Not Implemented Yet</p>
+  <div class="card mb-3" ng-repeat="user in ListOfUsers()">
+    <div class="card-header">
+      <img ng-show="findUserAvatar(user) != null"
+           ng-src="{{findUserAvatar(user)}}"
+           style="max-width: 25px; max-height: 25px;"
+           class="mr-2"/>
+           <b>{{findUserNick(user)}}</b>
+    </div>
+    <div class="card-body">
+      <p><a href="{{linkToFlow(user)}}">{{linkToFlow(user)}}</a></p>
+    </div>
+  </div>
 </div>

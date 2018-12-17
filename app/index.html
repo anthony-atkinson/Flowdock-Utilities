@@ -9,13 +9,16 @@
   <title>Flowdock Utilities</title>
   <meta name="description" content="">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <link rel="stylesheet" href="bower_components/html5-boilerplate/dist/css/normalize.css">
-  <link rel="stylesheet" href="bower_components/html5-boilerplate/dist/css/main.css">
-  <link rel="stylesheet" href="bower_components/bootstrap/dist/css/bootstrap.css">
-  <link rel="stylesheet" href="bower_components/bootstrap/dist/css/bootstrap-theme.css">
+  <!-- <link rel="stylesheet" href="bower_components/html5-boilerplate/dist/css/normalize.css">
+  <link rel="stylesheet" href="bower_components/html5-boilerplate/dist/css/main.css"> -->
+  <!-- <link rel="stylesheet" href="npm/bootstrap.min.css"> -->
+  <!-- <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css" integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO" crossorigin="anonymous"> -->
+  <!-- <link href="https://stackpath.bootstrapcdn.com/bootswatch/4.1.3/darkly/bootstrap.min.css" rel="stylesheet" integrity="sha384-w+yWASP3zYNxxvwoQBD5fUSc1tctKq4KUiZzxgkBSJACiUp+IbweVKvsEhMI+gz7" crossorigin="anonymous"> -->
+  <link href="https://stackpath.bootstrapcdn.com/bootswatch/4.1.3/flatly/bootstrap.min.css" rel="stylesheet" integrity="sha384-gJWVjz180MvwCrGGkC4xE5FjhWkTxHIR/+GgT8j2B3KKMgh6waEjPgzzh7lL7JZT" crossorigin="anonymous">
+  <!-- <link rel="stylesheet" href="npm/bootstrap-theme.min.css"> -->
   <link rel="stylesheet" href="app.css">
-  <link href="bower_components/bootstrap/dist/fonts/glyphicons-halflings-regular.ttf" type="application/x-font-ttf">
-  <script src="bower_components/html5-boilerplate/dist/js/vendor/modernizr-3.5.0.min.js"></script>
+  <!-- <link href="bower_components/bootstrap/dist/fonts/glyphicons-halflings-regular.ttf" type="application/x-font-ttf"> -->
+  <!-- <script src="bower_components/html5-boilerplate/dist/js/vendor/modernizr-3.5.0.min.js"></script> -->
 </head>
 <body>
   <!--[if lt IE 7]>
@@ -28,19 +31,19 @@
     </div>
     <div class="text-center" style="padding-bottom: 15px;">
       <div class="btn-group">
-        <button type="button" class="btn" ng-class="{ 'active': AppMode == 'Notifier'}" ng-click="setAppMode('Notifier')">
+        <button type="button" class="btn btn-secondary" ng-class="{ 'active': AppMode == 'Notifier'}" ng-click="setAppMode('Notifier')">
           Notifier
         </button>
-        <button type="button" class="btn" ng-class="{ 'active': AppMode == 'Search'}" ng-click="setAppMode('Search')">
+        <button type="button" class="btn btn-secondary" ng-class="{ 'active': AppMode == 'Search'}" ng-click="setAppMode('Search')">
           Search
         </button>
-        <button type="button" class="btn" ng-class="{ 'active': AppMode == 'FlowList'}" ng-click="setAppMode('FlowList')">
+        <button type="button" class="btn btn-secondary" ng-class="{ 'active': AppMode == 'FlowList'}" ng-click="setAppMode('FlowList')">
           Flow List
         </button>
-        <button type="button" class="btn" ng-class="{ 'active': AppMode == 'UserList'}" ng-click="setAppMode('UserList')">
+        <button type="button" class="btn btn-secondary" ng-class="{ 'active': AppMode == 'UserList'}" ng-click="setAppMode('UserList')">
           User List
         </button>
-        <button type="button" class="btn" ng-class="{ 'active': AppMode == 'Tags'}" ng-click="setAppMode('Tags')">
+        <button type="button" class="btn btn-secondary" ng-class="{ 'active': AppMode == 'Tags'}" ng-click="setAppMode('Tags')">
           Tags
         </button>
       </div>
@@ -51,14 +54,16 @@
   <!-- In production use:
   <script src="//ajax.googleapis.com/ajax/libs/angularjs/x.x.x/angular.min.js"></script>
   -->
-  <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
-  <script src="bower_components/bootstrap/dist/js/bootstrap.js"></script>
-  <script src="bower_components/angular/angular.js"></script>
-  <script src="bower_components/angular-route/angular-route.js"></script>
-  <script src="bower_components/angular-cookies/angular-cookies.js"></script>
-  <script src="bower_components/angular-audio/app/angular.audio.js"></script>
-  <script src="bower_components/angular-audio/app/scripts/main.js"></script>
+  <!-- <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script> -->
+  <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js" integrity="sha384-ZMP7rVo3mIykV+2+9J3UJ46jBk0WLaUAdn689aCwoqbBJiSnjAK/l8WvCWPIPm49" crossorigin="anonymous"></script>
+  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/js/bootstrap.min.js" integrity="sha384-ChfqqxuZUCnJSK3+MXmPNIyE6ZbWh2IMqE241rYiqJxyMiZ6OW/JmZQ5stwEULTy" crossorigin="anonymous"></script>
+  <!-- <script src="npm/bootstrap.min.js"></script> -->
+  <script src="npm/angular.min.js"></script>
+  <script src="npm/angular-route.min.js"></script>
+  <script src="npm/angular-cookies.min.js"></script>
   <script src="app.js"></script>
+  <script src="util/UserUtil.js"></script>
   <script src="util/DateUtil.js"></script>
   <script src="util/FlowdockAuthService.js"></script>
   <script src="util/NotificationService.js"></script>
@@ -69,8 +74,5 @@
   <script src="FlowList/FlowList.js"></script>
   <script src="Search/Search.js"></script>
   <script src="Tags/Tags.js"></script>
-  <script src="components/version/version.js"></script>
-  <script src="components/version/version-directive.js"></script>
-  <script src="components/version/interpolate-filter.js"></script>
 </body>
 </html>

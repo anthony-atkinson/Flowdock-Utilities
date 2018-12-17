@@ -1,8 +1,8 @@
 'use strict';
 
-angular.module('myApp.Tags', ['ngRoute', 'ngAudio', 'ngCookies']).
-controller('TagsCtrl', ['$scope', '$cookies', '$location', '$http', '$filter', 'ngAudio',
-  function($scope, $cookies, $location, $http, $filter, ngAudio) {
+angular.module('myApp.Tags', ['ngRoute', 'ngCookies']).
+controller('TagsCtrl', ['$scope', '$cookies', '$location', '$http', '$filter',
+  function($scope, $cookies, $location, $http, $filter) {
 
     $scope.controllerInit = function() {
 

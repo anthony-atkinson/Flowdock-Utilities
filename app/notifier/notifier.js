@@ -4,7 +4,7 @@ angular.module('myApp.Notifier', ['ngCookies', 'myApp.FlowdockAuthService', 'myA
   'myApp.DateUtil', 'myApp.FlowdockNotifierService']).
 controller('NotifierCtrl', ['$scope', '$cookies', '$filter', 'FlowdockAuthService', 'NotificationService',
   'DateUtil', 'FlowdockNotifierService',
-  function($scope, $cookies, $filter, authService, notificationService, DateUtil, notifierService) {    
+  function($scope, $cookies, $filter, authService, notificationService, DateUtil, notifierService) {
     $scope.ListeningToKeywordFlows = function() { return notifierService.ListeningToKeywordFlows; };
     $scope.ListeningToConstantlyFlows = function() { return notifierService.ListeningToConstantlyFlows; };
     $scope.SoundEnabledForKeywords = function() { return notifierService.SoundEnabledForKeywords; };

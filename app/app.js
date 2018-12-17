@@ -3,18 +3,17 @@
 // Declare app level module which depends on views, and components
 angular.module('myApp', [
   'ngRoute',
-  'ngAudio',
   'ngCookies',
   'myApp.DateUtil',
   'myApp.FlowdockAuthService',
   'myApp.NotificationService',
   'myApp.FlowdockNotifierService',
+  'myApp.UserUtil',
   'myApp.Notifier',
   'myApp.UserList',
   'myApp.FlowList',
   'myApp.Tags',
-  'myApp.Search',
-  'myApp.version'
+  'myApp.Search'
 ]).
 config(['$locationProvider', '$routeProvider',
   function($locationProvider, $routeProvider) {
@@ -39,10 +38,12 @@ config(['$locationProvider', '$routeProvider',
         .otherwise({redirectTo: '/Notifier'});
   }
 ]).
-controller('MainAppCtrl', ['$scope', '$cookies', '$location', '$http', '$filter', 'ngAudio',
+controller('MainAppCtrl', ['$scope', '$cookies', '$location', '$http', '$filter',
   'FlowdockAuthService', 'NotificationService',
-  function($scope, $cookies, $location, $http, $filter, ngAudio, authServ, notificationServ) {
-    $scope.AppMode = $location.path().replace('/', '');
+  function($scope, $cookies, $location, $http, $filter, authServ, notificationServ) {
+    $scope.AppMode = ( $location.path() !== '') ?
+        $location.path().replace('/', '') :
+        'Notifier';
 
     $scope.setAppMode = function(mode) {
       $scope.AppMode = mode;

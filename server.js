@@ -14,25 +14,28 @@ const bodyParser = require('body-parser');
 const cookieParser = require('cookie-parser');
 const simpleOauthModule = require('simple-oauth2');
 
+const port = 3000;
+
 const app = express();
 app.use(cookieParser());
 app.use(bodyParser());
 
-app.listen(3000, () => {
-  log.info('Express server started on port 3000'); // eslint-disable-line
+app.listen(port, () => {
+  log.info(`Server started and listening on port ${port}!`);
 });
 
 let oauth_settings = {};
 // Read in oauth settings from either environment variables (docker) or settings file
 // TODO: Get from environment variables first (for docker support)
-oauth_settings = JSON.parse(fs.readFileSync('oauth_settings.json', 'utf8'));
+oauth_settings = JSON.parse(fs.readFileSync('./config/oauth_settings.json', 'utf8'));
 
 const flowUriHost = 'https://api.flowdock.com';
 const BASE_PATH = '/notifier';
 const BASE_PATH_API = BASE_PATH + '/api';
 
 // Let files be served from the public directory
-app.use(BASE_PATH + '/app', express.static(path.join(__dirname, '../app')));
+app.use(BASE_PATH + '/app', express.static(path.join(__dirname, './app')));
+app.use(BASE_PATH, express.static(path.join(__dirname, './app')));
 
 const oauth2 = simpleOauthModule.create({
   client: {
@@ -55,9 +58,19 @@ const authorizationUri = oauth2.authorizationCode.authorizeURL({
 
 // Initial page redirecting to auth
 app.get(BASE_PATH_API + '/auth', (req, res) => {
+  // res.send('hello');
   const tokenCookie = req.cookies['token_obj'];
   if(tokenCookie !== undefined && tokenCookie !== null) {
-    let accessToken = oauth2.accessToken.create(tokenCookie);
+    let accessToken = {};
+    try {
+      accessToken = oauth2.accessToken.create(tokenCookie);
+    } catch(e) {
+      log.error(`It appears we have caught an error while creating ` +
+        `the token. Redirecting to ${oauth_settings.redirect_uri}`)
+        res.redirect(authorizationUri);
+        return;
+    }
+
     // Test if the token is expired
     if( accessToken.expired() ) {
       log.debug('Token is expired');
@@ -114,12 +127,12 @@ function retrieveToken(req, res, code) {
 }
 
 // Callback service parsing the authorization token and asking for the access token
-app.get(BASE_PATH_API + '/callback', (req, res) => {
+app.get(`${BASE_PATH_API}/callback`, (req, res) => {
   const code = req.query.code;
   retrieveToken(req, res, code);
 });
 
-app.get(BASE_PATH_API + '/FlowdockProxy', (req, res) => {
+app.get(`${BASE_PATH_API}/FlowdockProxy`, (req, res) => {
   const proxy = req.query.proxy;
   if( !proxy.startsWith('https://api.flowdock.com/') ) {
     return res.status(400).json('Only flowdock api is acceptable to proxy');
@@ -149,7 +162,7 @@ app.get(BASE_PATH_API + '/FlowdockProxy', (req, res) => {
   }
 });
 
-app.get(BASE_PATH_API + '/get/user', (req, res) => {
+app.get(`${BASE_PATH_API}/get/user`, (req, res) => {
   const proxy = req.query.proxy;
   log.debug('proxy: ', proxy);
 
@@ -187,9 +200,10 @@ app.get(BASE_PATH_API + '/get/user', (req, res) => {
 });
 
 app.get(BASE_PATH + '/', (req, res) => {
-  res.redirect(BASE_PATH_API + '/auth');
+  res.redirect(`${BASE_PATH_API}/auth`);
+  // res.redirect(`${BASE_PATH}/app`);
 });
 
 app.get('/', (req, res) => {
-  res.redirect(BASE_PATH_API + '/auth');
+  res.redirect(`${BASE_PATH_API}/auth`);
 });

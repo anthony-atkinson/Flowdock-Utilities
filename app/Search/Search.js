@@ -1,8 +1,8 @@
 'use strict';
 
-angular.module('myApp.Search', ['ngRoute', 'ngAudio', 'ngCookies', 'myApp.FlowdockAuthService']).
-controller('SearchCtrl', ['$scope', '$cookies', '$location', '$http', '$filter', 'ngAudio', 'FlowdockAuthService',
-  function($scope, $cookies, $location, $http, $filter, ngAudio, authService) {
+angular.module('myApp.Search', ['ngRoute', 'ngCookies', 'myApp.FlowdockAuthService', 'myApp.UserUtil']).
+controller('SearchCtrl', ['$scope', '$cookies', '$location', '$http', '$filter', 'FlowdockAuthService', 'UserUtil',
+  function($scope, $cookies, $location, $http, $filter, authService, userUtil) {
     var baseProxyUrl = '/notifier/api/FlowdockProxy?proxy=:proxy?event=message,comment,status,file';
     var baseUserObjUrl = '/notifier/api/get/user?proxy=https://api.flowdock.com/private/:id&access_token=:access_token';
     var baseFlowUrl = 'https://api.flowdock.com/flows/:organization/:flow/messages';
@@ -12,7 +12,7 @@ controller('SearchCtrl', ['$scope', '$cookies', '$location', '$http', '$filter',
 
     $scope.searchTerms = '';
     $scope.searchMode = 'flows';
-    
+
     $scope.flowToSearch = null;
     $scope.userIdToSearch = null;
 
@@ -23,7 +23,7 @@ controller('SearchCtrl', ['$scope', '$cookies', '$location', '$http', '$filter',
     $scope.ListOfUsers = function() {
       return $filter('orderBy')(authService.ListOfUsers, 'nick', false);
     };
-    
+
     $scope.response = null;
 
     $scope.searchInProgress = false;
@@ -96,41 +96,15 @@ controller('SearchCtrl', ['$scope', '$cookies', '$location', '$http', '$filter',
     }
 
     $scope.findUser = function(userID) {
-      if(userID === null || userID === undefined) {
-        return null;
-      }
-      var userList = $scope.ListOfUsers();
-      var foundUser = $filter('filter')(userList, {id: parseInt(userID)}, true);
-      if(foundUser.length) {
-        return foundUser[0]
-      }else if(authService.ListOfUsersNotAvailable.indexOf(userID) === -1) {
-        // User was probably removed from the organization; lets query for the user manually
-        // and add them to the main user list so that we don't have to do this again for this session.
-        var retrievedUser = requestUserObjFromFlowdock(userID);
-        if(retrievedUser !== null && retrievedUser !== undefined) {
-          userList.push(retrievedUser);
-          return retrievedUser;
-        }else {
-          // Add it to the list of not available users so that we don't try
-          // to process it again and waste time and network resources.
-          authService.ListOfUsersNotAvailable.push(userID);
-        }
-      }
-      return null;
+      return userUtil.findUser(userID);
     };
 
     $scope.findUserAvatar = function(userID) {
-      var foundUser = $scope.findUser(userID);
-      return foundUser !== null ? foundUser.avatar : 'assets/images/base_avatar.png';
+      return userUtil.findUserAvatar(userID);
     };
 
     $scope.findUserNick = function(userID) {
-      var foundUser = $scope.findUser(userID);
-      if(foundUser !== null && foundUser !== undefined) {
-        return (foundUser.removed) ? foundUser.nick + ' (Removed)' : foundUser.nick;
-      }else {
-        return userID + ' (object MIA)';
-      }
+      return userUtil.findUserNick(userID);
     };
 
     $scope.getNiceTime = function(timeInSeconds) {
@@ -145,6 +119,17 @@ controller('SearchCtrl', ['$scope', '$cookies', '$location', '$http', '$filter',
         return tags_clone.join(", ");
       }
       return "";
-    }
+    };
+
+    $scope.linkForMessage = function(message) {
+      if (message == null || message == undefined || $scope.flowToSearch == null) {
+        return '';
+      }
+      var url = "https://www.flowdock.com/app/:organization/:flow/threads/:thread";
+      url = url.replace(':organization', $scope.flowToSearch.organization.parameterized_name);
+      url = url.replace(':flow', $scope.flowToSearch.parameterized_name);
+      url = url.replace(':thread', message.thread_id);
+      return url;
+    };
   }
 ]);

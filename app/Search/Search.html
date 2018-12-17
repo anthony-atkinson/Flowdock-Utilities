@@ -7,11 +7,11 @@
     <div class="text-center">
         <h4>Search Mode</h4>
         <label class="radio-inline">
-            <input type="radio" name="searchMode" ng-model="searchMode" value="flows">
+            <input type="radio" name="searchMode" ng-model="searchMode" value="flows" ng-change="response = null">
             Flows
         </label>
         <label class="radio-inline">
-            <input type="radio" name="searchMode" ng-model="searchMode" value="users">
+            <input type="radio" name="searchMode" ng-model="searchMode" value="users" ng-change="response = null">
             Users
         </label>
     </div>
@@ -20,14 +20,14 @@
         <div class="form-group">
           <label for="flowToSearch">Flow to Search:</label>
           <select class="form-control" id="flowToSearch" ng-model="flowToSearch"
-                  ng-options="flow.name for flow in ListOfFlows()">
+                  ng-options="flow.name for flow in ListOfFlows()" ng-change="response = null">
           </select>
         </div>
     </div>
     <div ng-show="searchMode == 'users'">
         <div class="form-group">
             <label for="userToSearch">User to Search:</label>
-            <select class="form-control" id="userToSearch" ng-model="userIdToSearch">
+            <select class="form-control" id="userToSearch" ng-model="userIdToSearch" ng-change="response = null">
                 <option>Please select a value</option>
                 <option ng-repeat="user in ListOfUsers()" value="{{user.id}}">{{user.name}} ({{user.nick}}){{(user.removed) ? ' (Removed)' : ''}}</option>
             </select>
@@ -45,13 +45,20 @@
 
     <div ng-if="response.length != undefined">
         <h3>Results: {{response.length}}</h3>
-        <div class="panel panel-default" ng-repeat="message in response.slice().reverse()">
-            <div class="panel-heading">
+        <div class="card mb-3" ng-repeat="message in response.slice().reverse()">
+            <div class="card-header">
                 <img ng-show="findUserAvatar(message.user) != null" ng-src="{{findUserAvatar(message.user)}}" style="max-width: 25px; max-height: 25px;"/>
                 {{findUserNick(message.user)}}: {{getNiceTime(message.sent)}}
             </div>
-            <div class="panel-body">{{message.content}}</div>
-            <div ng-show="message.tags.length != 0" class="panel-footer"><b>Tags: </b>{{formattedTagList(message.tags)}}</div>
+            <div class="card-body">
+              <p class="mb-3">{{message.content}}</p>
+              <p ng-if="searchMode === 'flows'">
+                Link to thread: <a ng-href="{{linkForMessage(message)}}">{{linkForMessage(message)}}</a>
+              </p>
+            </div>
+            <div ng-show="message.tags.length != 0" class="card-footer">
+              <b>Tags: </b>{{formattedTagList(message.tags)}}
+            </div>
         </div>
     </div>
 

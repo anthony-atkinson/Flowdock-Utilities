@@ -3,12 +3,12 @@
  */
 'use strict';
 
-angular.module('myApp.NotificationService', ['ngAudio']).
-service('NotificationService', ['$filter', 'ngAudio', function($filter, ngAudio) {
+angular.module('myApp.NotificationService', []).
+service('NotificationService', ['$filter', function($filter) {
   var serviceRoot = this;
-  
+
   this.NotificationHistory = [];
-  this.NotificationSound = ngAudio.load("assets/sounds/SAO.mp3");
+  this.NotificationSound = new Audio("assets/sounds/SAO.mp3");
 
   // Let's check if the browser supports notifications
   if (!("Notification" in window)) {
@@ -32,7 +32,7 @@ service('NotificationService', ['$filter', 'ngAudio', function($filter, ngAudio)
       }
     });
   }
-  
+
 
   function NotificationItem(title, body, date) {
     this.Title = title;

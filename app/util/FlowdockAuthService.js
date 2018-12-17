@@ -7,13 +7,27 @@ service('FlowdockAuthService', ['$http', '$cookies', function($http, $cookies) {
   this.ListOfFlows = [];
   this.ListOfUsers = [];
   this.ListOfUsersNotAvailable = [];
+
+  function redirectToAuth() {
+    location.href = '/notifier/api/auth';
+  }
+
   var token_obj = $cookies.get('token_obj');
   if(token_obj !== undefined && token_obj !== null) {
     if(token_obj.startsWith('j:')) {
       token_obj = token_obj.substr(2);
     }
-    token_obj = JSON.parse(token_obj);
-    
+    try {
+      token_obj = JSON.parse(token_obj);
+    } catch(e) {
+      console.error("Caught error while trying to parse token_obj " +
+        "cookie as JSON. Clearing out token_obj cookie and re-authenticating.");
+        $cookies.remove('token_obj', {path:'/'});
+        $cookies.remove('token_obj');
+        redirectToAuth();
+    }
+
+
     this.userToken = token_obj.access_token;
     this.access_token = token_obj.access_token;
     this.refresh_token = token_obj.refresh_token;
@@ -23,10 +37,6 @@ service('FlowdockAuthService', ['$http', '$cookies', function($http, $cookies) {
   // Delete token_obj cookie since we don't need it anymore
   // (and so that the notifier doesn't die randomly)
   $cookies.remove('token_obj', {path:'/'});
-
-  function redirectToAuth() {
-    location.href = '/notifier/api/auth';
-  }
 
   this.refreshFlowNames = function() {
     if(this.access_token !== undefined && this.access_token !== null) {
