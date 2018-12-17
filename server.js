@@ -31,10 +31,10 @@ oauth_settings = JSON.parse(fs.readFileSync('./config/oauth_settings.json', 'utf
 
 const flowUriHost = 'https://api.flowdock.com';
 const BASE_PATH = '/notifier';
-const BASE_PATH_API = BASE_PATH + '/api';
+const BASE_PATH_API = `${BASE_PATH}/api`;
 
 // Let files be served from the public directory
-app.use(BASE_PATH + '/app', express.static(path.join(__dirname, './app')));
+app.use(`${BASE_PATH}/app`, express.static(path.join(__dirname, './app')));
 app.use(BASE_PATH, express.static(path.join(__dirname, './app')));
 
 const oauth2 = simpleOauthModule.create({
@@ -57,7 +57,7 @@ const authorizationUri = oauth2.authorizationCode.authorizeURL({
 });
 
 // Initial page redirecting to auth
-app.get(BASE_PATH_API + '/auth', (req, res) => {
+app.get(`${BASE_PATH_API}/auth`, (req, res) => {
   // res.send('hello');
   const tokenCookie = req.cookies['token_obj'];
   if(tokenCookie !== undefined && tokenCookie !== null) {
@@ -201,7 +201,6 @@ app.get(`${BASE_PATH_API}/get/user`, (req, res) => {
 
 app.get(BASE_PATH + '/', (req, res) => {
   res.redirect(`${BASE_PATH_API}/auth`);
-  // res.redirect(`${BASE_PATH}/app`);
 });
 
 app.get('/', (req, res) => {
